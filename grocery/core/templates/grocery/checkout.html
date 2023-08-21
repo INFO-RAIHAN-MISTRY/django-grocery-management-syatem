@@ -1,0 +1,136 @@
+{% extends 'grocery/base.html' %}
+{% load static %}
+
+
+{% block title %}
+  Check Out
+{% endblock title %}
+  
+{% block content %}
+  <!-- Breadcrumb Section Begin -->
+  <section class="breadcrumb-section set-bg" data-setbg="{% static 'grocery/img/breadcrumb.jpg' %}">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <div class="breadcrumb__text">
+            <h2>Checkout</h2>
+            <div class="breadcrumb__option">
+              <a href="{% url 'core:Home' %}">Home</a>
+              <span>Checkout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Breadcrumb Section End -->
+
+  <!-- Checkout Section Begin -->
+  <section class="checkout spad">
+    <div class="container">
+      <div class="checkout__form">
+        <h4>Select Address</h4>
+        <form action="{% url 'core:payment_success' payment.id %}" method="POST">
+        {% csrf_token %}
+          <div class="row">
+            <div class="col-lg-8 col-md-6 mb-5">
+              
+              {% if address %}
+                
+                {% for ads in address %}
+                  <div class="form-check">
+                    <input class="form-check-input" name='address' type="checkbox" value="{{ads.id}}" id="flexCheckDefault">
+                    <label class="form-check-label" for="flexCheckDefault">
+                      {{ads.address}}, {{ads.country}}, {{ads.state}}, {{ads.city}}, {{ads.postal}}, {{ads.phone1}}, {{ads.phone2}} -----> {{ads.address_type}}
+                    </label>
+                  </div>
+                  <hr class="hr">
+                {% endfor %}
+
+              {% else %}
+                <div class="col-lg-8">
+                  <div class="shoping__cart__btns">
+                      <a href="{% url 'core:Add_address' %}" class="primary-btn cart-btn">You have no saved address --> (ADD ADDRESS)</a>
+                  </div>
+                </div>    
+              {% endif %}
+
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="checkout__order">
+                <h4>Your Order</h4>
+                <div class="checkout__order__products">
+                  Products <span>Total</span>
+                </div>
+                <ul>
+                  
+                  {% if cart_items %}
+                    
+                    {% for items in cart_items %}
+                    <li>
+                      {{items.product.product_name}}<span>₹ {% widthratio items.quantity 1 items.product.product_price %}</span>
+                    </li>
+                    {% endfor %}
+                    
+                  {% endif %}
+                </ul>
+                <div class="checkout__order__subtotal">
+                  Subtotal <span>₹ {{cart_total}}</span>
+                </div>
+                <div class="checkout__order__total">
+                  Total <span>₹ {{cart_total}}</span>
+                </div>
+
+                {% if cart_total != 0 %}
+                  <button id="rzp-button1" type="submit" class="site-btn">Make Payment</button>
+                {% endif %}
+              
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+  <!-- Checkout Section End -->
+{% endblock %}
+
+{% block extra_body %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    var options = {
+        "key": "rzp_test_LOQW4a93WLPyup", // Enter the Key ID generated from the Dashboard
+        "amount": "{{payment.amount}}", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        "currency": "INR",
+        "name": "Grocery OGANI",
+        "description": "Make Purchese",
+        "image": "https://example.com/your_logo",
+        "order_id": "{{payment.id}}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        "handler": function (response){
+            window.location.href = "{% url 'core:payment_success' payment.id  %}"
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response){
+            alert(response.error.code);
+            alert(response.error.description);
+            alert(response.error.source);
+            alert(response.error.step);
+            alert(response.error.reason);
+            alert(response.error.metadata.order_id);
+            alert(response.error.metadata.payment_id);
+    });
+    document.getElementById('rzp-button1').onclick = function(e){
+        rzp1.open();
+        e.preventDefault();
+    }
+  </script>
+{% endblock extra_body %}
+
+{% comment %} alert(response.razorpay_payment_id);
+alert(response.razorpay_order_id);
+alert(response.razorpay_signature); {% endcomment %}
+  
