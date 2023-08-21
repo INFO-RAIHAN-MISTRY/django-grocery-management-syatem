@@ -1,1 +1,1 @@
-# grocery-management-syatem
+# Django-grocery-management-syatem
